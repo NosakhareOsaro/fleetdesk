@@ -45,4 +45,18 @@ class SyncJobToCalendarListenerTest extends TestCase
 
         event(new JobStatusUpdated($job, JobStatus::Assigned, JobStatus::InTransit));
     }
+
+    public function test_a_calendar_sync_failure_does_not_bubble_up(): void
+    {
+        $job = Job::factory()->assigned()->create();
+
+        $this->mock(CalendarSyncService::class)
+            ->shouldReceive('sync')
+            ->once()
+            ->andThrow(new \RuntimeException('Graph API is unreachable'));
+
+        event(new JobStatusUpdated($job, JobStatus::Pending, JobStatus::Assigned));
+
+        $this->assertTrue(true);
+    }
 }

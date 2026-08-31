@@ -60,4 +60,18 @@ class MicrosoftGraphCalendarSyncServiceTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://graph.microsoft.com/v1.0/users/dispatcher@fleetdesk.test/events/graph-event-123'
             && $request->method() === 'PATCH');
     }
+
+    public function test_it_does_nothing_when_graph_credentials_are_not_configured(): void
+    {
+        config(['services.microsoft_graph.tenant_id' => null]);
+
+        Http::fake();
+
+        $job = Job::factory()->assigned()->create();
+
+        (new MicrosoftGraphCalendarSyncService)->sync($job);
+
+        Http::assertNothingSent();
+        $this->assertNull($job->fresh()->graph_event_id);
+    }
 }
