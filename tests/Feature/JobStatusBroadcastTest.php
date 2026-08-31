@@ -6,7 +6,7 @@ use App\Enums\JobStatus;
 use App\Events\JobStatusUpdated;
 use App\Models\Job;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,11 +14,11 @@ class JobStatusBroadcastTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_implements_should_broadcast(): void
+    public function test_it_implements_should_broadcast_now(): void
     {
         $event = new JobStatusUpdated(new Job, JobStatus::Assigned, JobStatus::InTransit);
 
-        $this->assertInstanceOf(ShouldBroadcast::class, $event);
+        $this->assertInstanceOf(ShouldBroadcastNow::class, $event);
     }
 
     public function test_it_broadcasts_on_a_private_jobs_channel(): void
