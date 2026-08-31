@@ -1,9 +1,31 @@
 <script setup lang="ts">
+import { onBeforeUnmount, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useJobsStore } from '@/stores/jobs';
+import { connectEcho, disconnectEcho } from '@/lib/echo';
 import LoginForm from '@/components/LoginForm.vue';
 import JobBoard from '@/components/JobBoard.vue';
 
 const auth = useAuthStore();
+const jobs = useJobsStore();
+
+watch(
+    () => auth.token,
+    (token) => {
+        disconnectEcho();
+
+        if (!token) {
+            return;
+        }
+
+        connectEcho(token)
+            .private('jobs')
+            .listen('.job.status-updated', () => jobs.fetchJobs());
+    },
+    { immediate: true },
+);
+
+onBeforeUnmount(() => disconnectEcho());
 </script>
 
 <template>
