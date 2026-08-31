@@ -11,9 +11,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 class JobService
 {
-    /**
-     * @param  array{customer_id: int, scheduled_at?: string|null, notes?: string|null}  $data
-     */
     public function createJob(array $data): Job
     {
         return Job::create([
@@ -39,10 +36,6 @@ class JobService
         return $this->transition($job, $status);
     }
 
-    /**
-     * @param  array{status?: JobStatus, driver_id?: int}  $filters
-     * @return Collection<int, Job>
-     */
     public function listJobs(array $filters = []): Collection
     {
         return Job::query()

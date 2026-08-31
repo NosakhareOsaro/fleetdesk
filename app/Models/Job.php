@@ -15,8 +15,7 @@ class Job extends Model
     /** @use HasFactory<JobFactory> */
     use HasFactory;
 
-    // Table is `delivery_jobs`, not `jobs` — Laravel's database queue driver
-    // already owns a `jobs` table for queued jobs.
+    // named delivery_jobs — `jobs` is already taken by the queue driver
     protected $table = 'delivery_jobs';
 
     protected function casts(): array
@@ -28,17 +27,11 @@ class Job extends Model
         ];
     }
 
-    /**
-     * @return BelongsTo<Customer, $this>
-     */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
-    /**
-     * @return BelongsTo<Driver, $this>
-     */
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);

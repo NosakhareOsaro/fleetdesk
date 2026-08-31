@@ -34,9 +34,6 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * @return HasOne<Driver, $this>
-     */
     public function driver(): HasOne
     {
         return $this->hasOne(Driver::class);

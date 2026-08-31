@@ -14,9 +14,6 @@ class Customer extends Model
     /** @use HasFactory<CustomerFactory> */
     use HasFactory;
 
-    /**
-     * @return HasMany<Job, $this>
-     */
     public function jobs(): HasMany
     {
         return $this->hasMany(Job::class);

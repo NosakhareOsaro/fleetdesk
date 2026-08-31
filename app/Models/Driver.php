@@ -23,17 +23,11 @@ class Driver extends Model
         ];
     }
 
-    /**
-     * @return BelongsTo<User, $this>
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * @return HasMany<Job, $this>
-     */
     public function jobs(): HasMany
     {
         return $this->hasMany(Job::class);
