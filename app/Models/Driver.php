@@ -23,6 +23,11 @@ class Driver extends Model
         ];
     }
 
+    public function statusValue(): string
+    {
+        return $this->status->value;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

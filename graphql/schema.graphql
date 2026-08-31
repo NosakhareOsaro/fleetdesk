@@ -1,0 +1,59 @@
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+type Query {
+    jobs(status: JobStatus @eq, driverId: ID @eq(key: "driver_id")): [Job!]! @all
+    drivers: [Driver!]! @all
+    customers: [Customer!]! @all
+}
+
+type Mutation {
+    assignDriver(jobId: ID!, driverId: ID!): Job
+    updateJobStatus(jobId: ID!, status: JobStatus!): Job
+}
+
+enum JobStatus {
+    PENDING @enum(value: "pending")
+    ASSIGNED @enum(value: "assigned")
+    IN_TRANSIT @enum(value: "in_transit")
+    COMPLETED @enum(value: "completed")
+    CANCELLED @enum(value: "cancelled")
+}
+
+enum DriverStatus {
+    AVAILABLE @enum(value: "available")
+    ON_JOB @enum(value: "on_job")
+    OFF_DUTY @enum(value: "off_duty")
+}
+
+type Customer {
+    id: ID!
+    name: String!
+    address: String!
+    phone: String
+    email: String
+    jobs: [Job!]! @hasMany
+}
+
+type Driver {
+    id: ID!
+    status: DriverStatus! @method(name: "statusValue")
+    user: User! @belongsTo
+    jobs: [Job!]! @hasMany
+}
+
+type Job {
+    id: ID!
+    status: JobStatus! @method(name: "statusValue")
+    scheduledAt: DateTime @rename(attribute: "scheduled_at")
+    completedAt: DateTime @rename(attribute: "completed_at")
+    notes: String
+    customer: Customer! @belongsTo
+    driver: Driver @belongsTo
+    createdAt: DateTime! @rename(attribute: "created_at")
+}
+
+type User {
+    id: ID!
+    name: String!
+    email: String!
+}

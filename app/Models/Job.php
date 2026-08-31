@@ -27,6 +27,13 @@ class Job extends Model
         ];
     }
 
+    // graphql-php's EnumType only matches raw scalars in its value lookup,
+    // so backed-enum attributes need unwrapping before they hit the schema.
+    public function statusValue(): string
+    {
+        return $this->status->value;
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
