@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Contracts\CalendarSyncService;
+use App\Services\Graph\MicrosoftGraphCalendarSyncService;
+use App\Services\Graph\NullCalendarSyncService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +14,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            CalendarSyncService::class,
+            $this->app->environment('testing') ? NullCalendarSyncService::class : MicrosoftGraphCalendarSyncService::class,
+        );
     }
 
     /**
