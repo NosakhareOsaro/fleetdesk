@@ -1,0 +1,17 @@
+{
+    "appManager": {
+        "driver": "array",
+        "array": {
+            "apps": [
+                {
+                    "id": "fleetdesk",
+                    "key": "fleetdesk_key",
+                    "secret": "fleetdesk_secret",
+                    "maxConnections": -1,
+                    "enableClientMessages": false,
+                    "enabled": true
+                }
+            ]
+        }
+    }
+}

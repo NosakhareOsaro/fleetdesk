@@ -1,0 +1,75 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - fleetdesk
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - fleetdesk
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: fleetdesk
+      MYSQL_USER: fleetdesk
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fleetdesk
+
+  soketi:
+    image: quay.io/soketi/soketi:1.6-16-alpine
+    environment:
+      SOKETI_DEBUG: 1
+      SOKETI_DEFAULT_APP_ID: fleetdesk
+      SOKETI_DEFAULT_APP_KEY: fleetdesk_key
+      SOKETI_DEFAULT_APP_SECRET: fleetdesk_secret
+    ports:
+      - "6001:6001"
+    volumes:
+      - ./docker/soketi/config.json:/app/config.json:ro
+    networks:
+      - fleetdesk
+
+  node:
+    image: node:22-alpine
+    working_dir: /var/www/html
+    command: sh -c "npm install && npm run dev -- --host"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - fleetdesk
+
+networks:
+  fleetdesk:
+
+volumes:
+  mysql-data:
