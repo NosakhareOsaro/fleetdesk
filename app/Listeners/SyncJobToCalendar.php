@@ -5,6 +5,8 @@ namespace App\Listeners;
 use App\Contracts\CalendarSyncService;
 use App\Enums\JobStatus;
 use App\Events\JobStatusUpdated;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SyncJobToCalendar
 {
@@ -16,6 +18,13 @@ class SyncJobToCalendar
             return;
         }
 
-        $this->calendar->sync($event->job);
+        // Calendar sync is a side effect of the job transition, not part of
+        // it — a Graph outage or misconfiguration must not fail the request
+        // that changed the job's status.
+        try {
+            $this->calendar->sync($event->job);
+        } catch (Throwable $e) {
+            Log::error('Calendar sync failed for job '.$event->job->id, ['exception' => $e]);
+        }
     }
 }

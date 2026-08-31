@@ -1,58 +1,128 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<p align="center"><strong>FleetDesk</strong></p>
+<p align="center">Delivery/job management for a fuel &amp; waste logistics operation</p>
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+<a href="https://github.com/NosakhareOsaro/fleetdesk/actions/workflows/ci.yml"><img src="https://github.com/NosakhareOsaro/fleetdesk/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
-## About Laravel
+![FleetDesk job board](docs/job-board.jpg)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## What this is
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Dispatchers create delivery jobs, assign drivers, and move them through a
+lifecycle (`pending → assigned → in_transit → completed`, with `cancelled`
+reachable from any non-terminal state). Every status change broadcasts live
+to the dashboard over WebSockets, and assigning or completing a job syncs a
+Microsoft 365 calendar event.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+It's a portfolio project built to demonstrate PHP 8.4/Laravel 13, GraphQL
+(Lighthouse), Vue 3 + TypeScript, MySQL, PHPUnit/TDD, Docker, GitHub Actions
+CI, Soketi/WebSockets, and Microsoft Graph integration.
 
-## Learning Laravel
+## Architecture
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```mermaid
+flowchart LR
+    Browser["Vue 3 SPA<br/>(TypeScript, Pinia)"]
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+    subgraph Docker Compose
+        Nginx["nginx"]
+        App["php-fpm<br/>Laravel 13"]
+        MySQL[("MySQL 8.4")]
+        Soketi["Soketi<br/>(Pusher-protocol WS)"]
+        Node["node<br/>(Vite dev server)"]
+    end
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+    Graph["Microsoft Graph API"]
 
-## Agentic Development
+    Browser -- "REST: /api/login, /api/register" --> Nginx
+    Browser -- "GraphQL: /graphql" --> Nginx
+    Browser -- "WebSocket (job updates)" --> Soketi
+    Browser -. "Vite HMR (dev only)" .-> Node
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+    Nginx --> App
+    App --> MySQL
+    App -- "broadcasts JobStatusUpdated" --> Soketi
+    App -- "on assigned/completed" --> Graph
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Where each requirement is demonstrated
 
-## Contributing
+| Area | Where |
+|---|---|
+| Laravel 13, PHP 8.4 | `app/`, `composer.json` |
+| Sanctum auth (REST) | `app/Http/Controllers/AuthController.php`, `routes/api.php` |
+| GraphQL API (Lighthouse) | `graphql/schema.graphql`, `app/GraphQL/Mutations/` |
+| Vue 3 + TypeScript (strict) | `resources/js/`, `tsconfig.json` |
+| Typed GraphQL client (codegen) | `codegen.ts`, `resources/js/generated/` |
+| MySQL + migrations | `database/migrations/` |
+| PHPUnit, TDD-first | `tests/Feature/` — see commit history: every feature is a failing-test commit followed by an implementation commit |
+| Docker Compose | `docker-compose.yml`, `docker/` |
+| GitHub Actions CI | `.github/workflows/ci.yml` (Pint, PHPUnit, ESLint, type-check, build) |
+| Realtime broadcasting (Soketi) | `app/Events/JobStatusUpdated.php`, `resources/js/lib/echo.ts` |
+| Microsoft Graph calendar sync | `app/Services/Graph/`, `app/Listeners/SyncJobToCalendar.php` |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Running it
 
-## Code of Conduct
+Requires Docker.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone https://github.com/NosakhareOsaro/fleetdesk.git
+cd fleetdesk
+cp .env.example .env
+docker compose up -d
+docker compose exec app php artisan demo:seed
+```
 
-## Security Vulnerabilities
+Then open **http://localhost:8000** and log in with
+`dispatcher@fleetdesk.test` / `password`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- App: http://localhost:8000
+- GraphQL endpoint: http://localhost:8000/graphql
+- Vite dev server: http://localhost:5183
+- Soketi: ws://localhost:6001
 
-## License
+To see the realtime update live, open the job board in two browser tabs,
+sign in on both, and change a job's status in one — the other updates
+without a refresh.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Testing
+
+```bash
+docker compose exec app php artisan test    # PHPUnit
+docker compose exec app vendor/bin/pint     # PHP style
+docker compose exec node npm run lint       # ESLint
+docker compose exec node npm run type-check # vue-tsc
+docker compose exec node npm run build      # production build
+```
+
+## Microsoft Graph setup (optional)
+
+Calendar sync no-ops until real Azure credentials are configured — the app
+works fully without it. To enable it, register an app in Azure AD with
+`Calendars.ReadWrite` application permissions and set in `.env`:
+
+```
+MS_GRAPH_TENANT_ID=
+MS_GRAPH_CLIENT_ID=
+MS_GRAPH_CLIENT_SECRET=
+MS_GRAPH_CALENDAR_USER_ID=   # the mailbox to create events in
+```
+
+## Domain model
+
+Four models, deliberately kept small: `User` (role: dispatcher/driver/manager),
+`Customer`, `Driver`, `Job`. `Job`'s table is `delivery_jobs` — Laravel's
+database queue driver already owns a `jobs` table.
+
+## Built with Claude Code
+
+This repo was built end-to-end with [Claude Code](https://claude.com/claude-code)
+working from a build brief (`CLAUDE.md`) that specified the stack, domain
+model, and a phased build order (scaffold → domain/TDD → GraphQL → frontend
+→ realtime → Graph integration → polish). Each phase was implemented as a
+sequence of small, conventional commits — tests committed red, then the
+implementation that turns them green — and verified against the running
+Docker stack (including two real bugs found only by exercising the app in a
+browser: a Lighthouse query-cache serialization issue, and calendar sync
+exceptions breaking job updates when Graph credentials aren't configured).

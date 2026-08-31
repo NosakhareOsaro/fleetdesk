@@ -10,6 +10,10 @@ class MicrosoftGraphCalendarSyncService implements CalendarSyncService
 {
     public function sync(Job $job): void
     {
+        if (! $this->isConfigured()) {
+            return;
+        }
+
         $token = $this->accessToken();
         $calendarUserId = config('services.microsoft_graph.calendar_user_id');
         $payload = $this->eventPayload($job);
@@ -51,6 +55,14 @@ class MicrosoftGraphCalendarSyncService implements CalendarSyncService
                 'timeZone' => 'UTC',
             ],
         ];
+    }
+
+    private function isConfigured(): bool
+    {
+        return filled(config('services.microsoft_graph.tenant_id'))
+            && filled(config('services.microsoft_graph.client_id'))
+            && filled(config('services.microsoft_graph.client_secret'))
+            && filled(config('services.microsoft_graph.calendar_user_id'));
     }
 
     private function accessToken(): string
