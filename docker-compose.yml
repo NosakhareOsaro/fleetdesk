@@ -64,7 +64,7 @@ services:
       - .:/var/www/html
       - /var/www/html/node_modules
     ports:
-      - "5173:5173"
+      - "5183:5183"
     networks:
       - fleetdesk
 
