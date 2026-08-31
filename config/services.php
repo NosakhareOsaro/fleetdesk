@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'microsoft_graph' => [
+        'tenant_id' => env('MS_GRAPH_TENANT_ID'),
+        'client_id' => env('MS_GRAPH_CLIENT_ID'),
+        'client_secret' => env('MS_GRAPH_CLIENT_SECRET'),
+        'calendar_user_id' => env('MS_GRAPH_CALENDAR_USER_ID'),
+    ],
+
 ];
