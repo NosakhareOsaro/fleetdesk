@@ -115,14 +115,12 @@ Four models, deliberately kept small: `User` (role: dispatcher/driver/manager),
 `Customer`, `Driver`, `Job`. `Job`'s table is `delivery_jobs` — Laravel's
 database queue driver already owns a `jobs` table.
 
-## Built with Claude Code
+## Build notes
 
-This repo was built end-to-end with [Claude Code](https://claude.com/claude-code)
-working from a build brief (`CLAUDE.md`) that specified the stack, domain
-model, and a phased build order (scaffold → domain/TDD → GraphQL → frontend
-→ realtime → Graph integration → polish). Each phase was implemented as a
-sequence of small, conventional commits — tests committed red, then the
-implementation that turns them green — and verified against the running
-Docker stack (including two real bugs found only by exercising the app in a
-browser: a Lighthouse query-cache serialization issue, and calendar sync
-exceptions breaking job updates when Graph credentials aren't configured).
+Built in phases (scaffold, domain with TDD, GraphQL, frontend, realtime, Graph
+integration, polish) as a sequence of small conventional commits, with tests
+committed red before the implementation that turns them green, and verified
+against the running Docker stack. Two bugs surfaced only by exercising the app
+in a browser rather than in the test suite: a Lighthouse query-cache
+serialization issue, and calendar sync exceptions breaking job updates when
+Graph credentials are not configured.
